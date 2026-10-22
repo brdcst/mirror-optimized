@@ -95,11 +95,10 @@ u32 HardwareComposer::ComposeLocked(f32* out_speed_scale, Display& display,
         }
 
         // Try to fetch the framebuffer (either new or stale).
+        // A stale buffer is only kept when it was found above and is still acquired.
         const auto result = should_try_acquire
             ? this->CacheFramebufferLocked(*layer, consumer_id)
-            : (m_framebuffers.find(consumer_id) != m_framebuffers.end() && m_framebuffers[consumer_id].is_acquired
-                ? CacheStatus::CachedBufferReused
-                : CacheStatus::NoBufferAvailable);
+            : CacheStatus::CachedBufferReused;
 
         // If we failed, skip this layer.
         if (result == CacheStatus::NoBufferAvailable) {
@@ -111,7 +110,7 @@ u32 HardwareComposer::ComposeLocked(f32* out_speed_scale, Display& display,
             has_acquired_buffer = true;
         }
 
-        const auto& buffer = m_framebuffers[consumer_id];
+        const auto& buffer = m_framebuffers.find(consumer_id)->second;
         const auto& item = buffer.item;
         const auto& igbp_buffer = *item.graphic_buffer;
 

@@ -147,7 +147,6 @@ enum class Status {
     PushPhiArgument,
 };
 
-template <typename Type>
 struct ReadState {
     ReadState(IR::Block* block_) : block{block_} {}
     ReadState() = default;
@@ -170,10 +169,10 @@ public:
     template <typename Type>
     IR::Value ReadVariable(Type variable, IR::Block* root_block) {
         // TODO: Windows commits sodoku if you use small_vector
-        std::vector<ReadState<Type>> stack{
-            ReadState<Type>(nullptr),
-            ReadState<Type>(root_block),
-        };
+        auto& stack{read_stack};
+        stack.clear();
+        stack.emplace_back(nullptr);
+        stack.emplace_back(root_block);
         const auto prepare_phi_operand{[&] {
             if (stack.back().pred_it == stack.back().pred_end) {
                 IR::Inst* const phi{stack.back().phi};
@@ -303,6 +302,7 @@ private:
     // TODO: Windows dies with stack exhaustion?
     std::unordered_map<IR::Block*, std::map<Variant, IR::Inst*>> incomplete_phis;
     DefTable current_def;
+    std::vector<ReadState> read_stack;
 };
 
 void VisitInst(Pass& pass, IR::Block* block, IR::Inst& inst) {

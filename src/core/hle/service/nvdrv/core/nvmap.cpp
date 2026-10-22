@@ -144,20 +144,18 @@ NvResult NvMap::CreateHandle(u64 size, std::shared_ptr<NvMap::Handle>& result_ou
 
 std::shared_ptr<NvMap::Handle> NvMap::GetHandle(Handle::Id handle) {
     std::scoped_lock lock(handles_lock);
-    try {
-        return handles.at(handle);
-    } catch (std::out_of_range&) {
-        return nullptr;
+    if (auto it = handles.find(handle); it != handles.end()) {
+        return it->second;
     }
+    return nullptr;
 }
 
 DAddr NvMap::GetHandleAddress(Handle::Id handle) {
     std::scoped_lock lock(handles_lock);
-    try {
-        return handles.at(handle)->d_address;
-    } catch (std::out_of_range&) {
-        return 0;
+    if (auto it = handles.find(handle); it != handles.end()) {
+        return it->second->d_address;
     }
+    return 0;
 }
 
 DAddr NvMap::PinHandle(NvMap::Handle::Id handle, bool low_area_pin) {

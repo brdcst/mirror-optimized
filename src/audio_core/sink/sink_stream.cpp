@@ -102,7 +102,7 @@ std::vector<s16> SinkStream::ReleaseBuffer(u64 num_samples) {
 void SinkStream::ClearQueue() {
     std::scoped_lock lk{release_mutex};
 
-    samples_buffer.Pop();
+    samples_buffer.Clear();
     SinkBuffer tmp;
     while (queue.TryPop(tmp));
 

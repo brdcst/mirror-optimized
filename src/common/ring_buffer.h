@@ -88,6 +88,12 @@ public:
         return out;
     }
 
+    /// Discards all slots currently in the ring buffer
+    void Clear() {
+        std::lock_guard lock(rb_mutex);
+        read_index = write_index;
+    }
+
     /// @returns Number of slots used
     [[nodiscard]] inline std::size_t Size() const {
         return write_index - read_index;

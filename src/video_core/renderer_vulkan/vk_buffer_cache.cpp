@@ -670,12 +670,13 @@ void BufferCacheRuntime::BindVertexBuffers(VideoCommon::HostBindings<Buffer>& bi
         return;
     }
     if (device.IsExtExtendedDynamicStateSupported()) {
-        scheduler.Record([bindings_ = std::move(bindings), buffer_handles_ = std::move(buffer_handles), binding_count](vk::CommandBuffer cmdbuf) {
-            cmdbuf.BindVertexBuffers2EXT(bindings_.min_index, binding_count, buffer_handles_.data(), bindings_.offsets.data(), bindings_.sizes.data(), bindings_.strides.data());
+        // Only capture what the command uses, records are copied into the command chunk
+        scheduler.Record([min_index = bindings.min_index, offsets = std::move(bindings.offsets), sizes = std::move(bindings.sizes), strides = std::move(bindings.strides), buffer_handles_ = std::move(buffer_handles), binding_count](vk::CommandBuffer cmdbuf) {
+            cmdbuf.BindVertexBuffers2EXT(min_index, binding_count, buffer_handles_.data(), offsets.data(), sizes.data(), strides.data());
         });
     } else {
-        scheduler.Record([bindings_ = std::move(bindings), buffer_handles_ = std::move(buffer_handles), binding_count](vk::CommandBuffer cmdbuf) {
-            cmdbuf.BindVertexBuffers(bindings_.min_index, binding_count, buffer_handles_.data(), bindings_.offsets.data());
+        scheduler.Record([min_index = bindings.min_index, offsets = std::move(bindings.offsets), buffer_handles_ = std::move(buffer_handles), binding_count](vk::CommandBuffer cmdbuf) {
+            cmdbuf.BindVertexBuffers(min_index, binding_count, buffer_handles_.data(), offsets.data());
         });
     }
 }

@@ -30,7 +30,7 @@ class InputParcel final {
 public:
     explicit InputParcel(std::span<const u8> in_data) : read_buffer(std::move(in_data)) {
         DeserializeHeader();
-        [[maybe_unused]] const std::u16string token = ReadInterfaceToken();
+        SkipInterfaceToken();
     }
 
     template <typename T>
@@ -104,6 +104,16 @@ public:
         read_index = Common::AlignUp(read_index, 4);
 
         return token;
+    }
+
+    void SkipInterfaceToken() {
+        [[maybe_unused]] const u32 unknown = Read<u32>();
+        const u32 length = Read<u32>();
+        const std::size_t token_size = static_cast<std::size_t>(length + 1) * sizeof(u16);
+        ASSERT(read_index + token_size <= read_buffer.size());
+
+        read_index += token_size;
+        read_index = Common::AlignUp(read_index, 4);
     }
 
     void DeserializeHeader() {

@@ -2534,15 +2534,18 @@ void TextureCache<P>::PrepareImageView(ImageViewId image_view_id, bool is_modifi
 }
 
 template <class P>
-void TextureCache<P>::CopyImage(ImageId dst_id, ImageId src_id, std::vector<ImageCopy> copies) {
+void TextureCache<P>::CopyImage(ImageId dst_id, ImageId src_id, std::span<const ImageCopy> copies) {
     Image& dst = slot_images[dst_id];
     Image& src = slot_images[src_id];
     const bool is_rescaled = True(src.flags & ImageFlagBits::Rescaled);
+    std::vector<ImageCopy> scaled_copies;
     if (is_rescaled) {
         ASSERT(True(dst.flags & ImageFlagBits::Rescaled));
         const bool both_2d{src.info.type == ImageType::e2D && dst.info.type == ImageType::e2D};
         const auto& resolution = Settings::values.resolution_info;
-        for (auto& copy : copies) {
+        scaled_copies.assign(copies.begin(), copies.end());
+        copies = scaled_copies;
+        for (auto& copy : scaled_copies) {
             copy.src_offset.x = resolution.ScaleUp(copy.src_offset.x);
             copy.dst_offset.x = resolution.ScaleUp(copy.dst_offset.x);
             copy.extent.width = resolution.ScaleUp(copy.extent.width);

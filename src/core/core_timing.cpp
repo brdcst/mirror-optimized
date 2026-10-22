@@ -8,6 +8,7 @@
 #include <mutex>
 #include <string>
 #include <tuple>
+#include <boost/container/small_vector.hpp>
 #include "common/cpu_features.h"
 #include "common/cpu_features.h"
 
@@ -181,10 +182,10 @@ void CoreTiming::UnscheduleEvent(const std::shared_ptr<EventType>& event_type,
     {
         std::scoped_lock lk{basic_lock};
 
-        std::vector<heap_t::handle_type> to_remove;
+        boost::container::small_vector<heap_t::handle_type, 4> to_remove;
         for (auto itr = event_queue.begin(); itr != event_queue.end(); itr++) {
             const Event& e = *itr;
-            if (e.type.lock().get() == event_type.get()) {
+            if (!e.type.owner_before(event_type) && !event_type.owner_before(e.type)) {
                 to_remove.push_back(itr->handle);
             }
         }

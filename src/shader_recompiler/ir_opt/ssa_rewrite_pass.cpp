@@ -16,12 +16,13 @@
 //      https://link.springer.com/chapter/10.1007/978-3-642-37051-9_6
 //
 
-#include <deque>
 #include <map>
 #include <span>
 #include "common/container/unordered_map.h"
 #include <variant>
 #include <vector>
+
+#include <boost/container/small_vector.hpp>
 
 #include "shader_recompiler/frontend/ir/basic_block.h"
 #include "shader_recompiler/frontend/ir/opcodes.h"
@@ -384,11 +385,14 @@ void VisitBlock(Pass& pass, IR::Block* block) {
 }
 
 IR::Type GetConcreteType(IR::Inst* inst) {
-    std::deque<IR::Inst*> queue;
+    boost::container::small_vector<IR::Inst*, 4> queue;
     queue.push_back(inst);
-    while (!queue.empty()) {
-        IR::Inst* current = queue.front();
-        queue.pop_front();
+    for (size_t head = 0; head < queue.size();) {
+        IR::Inst* current = queue[head++];
+        if (head == queue.size()) {
+            queue.clear();
+            head = 0;
+        }
         const size_t num_args{current->NumArgs()};
         for (size_t i = 0; i < num_args; ++i) {
             const auto set_type = current->Arg(i).Type();

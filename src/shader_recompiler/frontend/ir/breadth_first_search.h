@@ -5,7 +5,6 @@
 
 #include <optional>
 #include <type_traits>
-#include <queue>
 
 #include <boost/container/small_vector.hpp>
 
@@ -23,13 +22,12 @@ auto BreadthFirstSearch(const Value& value, Pred&& pred)
     // Breadth-first search visiting the right most arguments first
     // Small vector has been determined from shaders in Super Smash Bros. Ultimate
     boost::container::small_vector<const Inst*, 2> visited;
-    std::queue<const Inst*> queue;
-    queue.push(value.InstRecursive());
+    boost::container::small_vector<const Inst*, 4> queue;
+    queue.push_back(value.InstRecursive());
 
-    while (!queue.empty()) {
+    for (size_t head = 0; head < queue.size();) {
         // Pop one instruction from the queue
-        const Inst* const inst{queue.front()};
-        queue.pop();
+        const Inst* const inst{queue[head++]};
         if (const std::optional result = pred(inst)) {
             // This is the instruction we were looking for
             return result;
@@ -44,7 +42,7 @@ auto BreadthFirstSearch(const Value& value, Pred&& pred)
             const Inst* const arg_inst{arg_value.InstRecursive()};
             if (std::ranges::find(visited, arg_inst) == visited.end()) {
                 visited.push_back(arg_inst);
-                queue.push(arg_inst);
+                queue.push_back(arg_inst);
             }
         }
     }

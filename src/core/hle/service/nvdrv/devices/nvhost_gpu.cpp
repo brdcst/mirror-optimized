@@ -405,13 +405,13 @@ NvResult nvhost_gpu::SubmitGPFIFOBase1(IoctlSubmitGpfifo& params,
         return NvResult::InvalidSize;
     }
 
-    Tegra::CommandList entries(params.num_entries);
+    Tegra::CommandList entries;
     if (kickoff) {
+        entries.command_lists.resize(params.num_entries);
         this->GetSessionMemory(fd).ReadBlock(params.address, entries.command_lists.data(),
                                              params.num_entries * sizeof(Tegra::CommandListHeader));
     } else {
-        std::memcpy(entries.command_lists.data(), commands.data(),
-                    params.num_entries * sizeof(Tegra::CommandListHeader));
+        entries.command_lists.assign(commands.begin(), commands.begin() + params.num_entries);
     }
 
     return SubmitGPFIFOImpl(params, std::move(entries));
@@ -424,9 +424,8 @@ NvResult nvhost_gpu::SubmitGPFIFOBase2(IoctlSubmitGpfifo& params,
         return NvResult::InvalidSize;
     }
 
-    Tegra::CommandList entries(params.num_entries);
-    std::memcpy(entries.command_lists.data(), commands.data(),
-                params.num_entries * sizeof(Tegra::CommandListHeader));
+    Tegra::CommandList entries;
+    entries.command_lists.assign(commands.begin(), commands.begin() + params.num_entries);
     return SubmitGPFIFOImpl(params, std::move(entries));
 }
 

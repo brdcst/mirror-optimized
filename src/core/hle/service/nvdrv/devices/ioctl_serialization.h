@@ -9,6 +9,8 @@
 #include <span>
 #include <vector>
 
+#include <boost/container/small_vector.hpp>
+
 #include "common/concepts.h"
 #include "core/hle/service/nvdrv/devices/nvdevice.h"
 
@@ -52,7 +54,7 @@ NvResult WrapGeneric(F&& callable, std::span<const u8> input, std::span<const u8
 
     // Read the variable-sized inputs.
     const size_t num_var_args = HasVarArg ? ((input.size() - var_offset) / sizeof(VarArg)) : 0;
-    std::vector<VarArg> var_args(num_var_args);
+    boost::container::small_vector<VarArg, 32> var_args(num_var_args);
     if constexpr (HasVarArg) {
         if (num_var_args > 0) {
             std::memcpy(var_args.data(), input.data() + var_offset, num_var_args * sizeof(VarArg));
@@ -60,7 +62,7 @@ NvResult WrapGeneric(F&& callable, std::span<const u8> input, std::span<const u8
     }
 
     const size_t num_inl_in_var_args = HasInlInVarArg ? (inline_input.size() / sizeof(InlInVarArg)) : 0;
-    std::vector<InlInVarArg> inl_in_var_args(num_inl_in_var_args);
+    boost::container::small_vector<InlInVarArg, 32> inl_in_var_args(num_inl_in_var_args);
     if constexpr (HasInlInVarArg) {
         if (num_inl_in_var_args > 0) {
             std::memcpy(inl_in_var_args.data(), inline_input.data(), num_inl_in_var_args * sizeof(InlInVarArg));

@@ -551,8 +551,9 @@ struct Memory::Impl {
             ASSERT(current_block != 65535);
 
             page_table.entries.CommitRegion(base, end);
+            // target and base advance together, so the per-page host pointer is constant
+            const auto host_ptr = reinterpret_cast<u64>(system.DeviceMemory().GetPointer<u8>(target)) - (base << YUZU_PAGEBITS);
             while (base != end) {
-                auto host_ptr = reinterpret_cast<u64>(system.DeviceMemory().GetPointer<u8>(target)) - (base << YUZU_PAGEBITS);;
                 auto& entry = page_table.entries.GetUnchecked(base);
 
                 entry.Store(false, type, current_block, host_ptr);
@@ -560,7 +561,6 @@ struct Memory::Impl {
                            "memory mapping base yield a nullptr within the table");
 
                 base += 1;
-                target += YUZU_PAGESIZE;
             }
         }
     }

@@ -89,7 +89,7 @@ jobs:
           mkdir -p pkg
           cp build/bin/*.exe pkg/
           cp build/bin/*.dll pkg/ 2>/dev/null || true
-          cp LICENSE* README* pkg/
+          cp -r LICENSE* README* pkg/
           ls -la pkg
 
       - name: Upload artifact
